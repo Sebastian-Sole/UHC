@@ -65,63 +65,67 @@ public class PluginCommands implements CommandExecutor {
                 playerStateOnStart(player);
             }
 
-            // 10 MINUTE WARNING
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-                @Override
-                public void run() {
-                    Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "10 MINUTES!");
-                    var xBorder = main.getWorld().getWorldBorder().getSize();
-                    Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
-                }
-            }, 6000, 18000L);
-
-            // 5 MINUTE WARNING
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-                @Override
-                public void run() {
-                    Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "5 MINUTES!");
-                    var xBorder = main.getWorld().getWorldBorder().getSize();
-                    Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
-                }
-            }, 12000, 18000L);
-
-            // 3 MINUTE WARNING
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-                @Override
-                public void run() {
-                    Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "3 MINUTES!");
-                    var xBorder = main.getWorld().getWorldBorder().getSize();
-                    Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
-                }
-            }, 14400, 18000L);
-
-            // 1 MINUTE WARNING
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-                @Override
-                public void run() {
-                    Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "1 MINUTE!");
-                    var xBorder = main.getWorld().getWorldBorder().getSize();
-                    Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
-                }
-            }, 16800, 18000L);
-
-            // Shrink border
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-                @Override
-                public void run() {
-                    Bukkit.broadcastMessage("Border shrinking...");
-                    WorldBorder wb = main.getWorld().getWorldBorder();
-                    if (wb.getSize() < 200) {
-                        wb.setSize(wb.getSize() - 200.00);
-                    }
-                    Bukkit.broadcastMessage("Next shrink: 15 Minutes");
-                }
-            }, 18000, 18000L);
+            startTimers();
 
             gameIsRunning = true;
         }
 
         return false;
+    }
+
+    private void startTimers() {
+        // 10 MINUTE WARNING
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "10 MINUTES!");
+                var xBorder = main.getWorld().getWorldBorder().getSize();
+                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+            }
+        }, 6000, 18000L);
+
+        // 5 MINUTE WARNING
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "5 MINUTES!");
+                var xBorder = main.getWorld().getWorldBorder().getSize();
+                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+            }
+        }, 12000, 18000L);
+
+        // 3 MINUTE WARNING
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "3 MINUTES!");
+                var xBorder = main.getWorld().getWorldBorder().getSize();
+                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+            }
+        }, 14400, 18000L);
+
+        // 1 MINUTE WARNING
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "1 MINUTE!");
+                var xBorder = main.getWorld().getWorldBorder().getSize();
+                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+            }
+        }, 16800, 18000L);
+
+        // Shrink border
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage("Border shrinking...");
+                WorldBorder wb = main.getWorld().getWorldBorder();
+                if (wb.getSize() < 200) {
+                    wb.setSize(wb.getSize() - 200.00);
+                }
+                Bukkit.broadcastMessage("Next shrink: 15 Minutes");
+            }
+        }, 18000, 18000L);
     }
 
     private void playerStateOnStart(Player player) {

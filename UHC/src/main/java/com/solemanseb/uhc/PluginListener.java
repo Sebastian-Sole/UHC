@@ -1,12 +1,18 @@
 package com.solemanseb.uhc;
 
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.WorldBorder;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.TabCompleteEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.List;
 
@@ -41,4 +47,23 @@ public class PluginListener implements Listener {
 
         event.setCompletions(completions);
     }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event){
+        // Drop player head
+        //todo; Add if game is running check
+        Player killed = event.getEntity().getPlayer();
+        event.getDrops().add(getPlayerHead(killed));
+
+    }
+
+    private ItemStack getPlayerHead(Player player) {
+        ItemStack head = new ItemStack(Material.matchMaterial("PLAYER_HEAD"), 1);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        meta.setOwningPlayer(player);
+        meta.setDisplayName(ChatColor.DARK_RED.toString() + player.getName()+ ChatColor.DARK_RED + "'s Head");
+        return head;
+    }
+
+
 }

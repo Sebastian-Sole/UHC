@@ -15,14 +15,14 @@ commands:
 #    description: Clears teams.
 #    usage: /clearteams
 #    permission: battledome.clearteams
-#  start:
-#    description: Start the Battledome game.
-#    usage: /start
-#    permission: battledome.start
-#  end:
-#    description: Stops the Battledome game.
-#    usage: /end
-#    permission: battledome.end
+  start:
+    description: Start the Battledome game.
+    usage: /start
+    permission: uhc.start
+  end:
+    description: Stops the Battledome game.
+    usage: /end
+    permission: uhc.end
 #  createspawn:
 #    description: Creates spawn circle where the player is standing
 #    usage: /createspawn

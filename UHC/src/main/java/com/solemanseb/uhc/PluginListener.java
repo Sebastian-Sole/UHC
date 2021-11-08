@@ -59,7 +59,8 @@ public class PluginListener implements Listener {
 
         main.commands.worldBorderModified = true;
 
-        main.addActivePlayer(player);
+        UHCPlayer uhcPlayer = new UHCPlayer(player);
+        main.addActivePlayer(uhcPlayer);
 
     }
 

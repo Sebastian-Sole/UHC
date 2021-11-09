@@ -14,7 +14,6 @@ public class Team {
     private ArrayList<UHCPlayer> playerRequestsList = new ArrayList<>();
     private String teamColor;
 
-
     // Constructor
 
     public Team(String teamName, UHCPlayer leader, String color) {
@@ -28,19 +27,23 @@ public class Team {
         members.add(player);
         player.setTeam(this);
         player.getPlayer().setPlayerListName(teamColor + teamName + teamColor + player.getPlayer().getName());
+        player.getPlayer().setDisplayName(teamColor + teamName + teamColor + player.getPlayer().getName());
+        player.getPlayer().setCustomName(teamColor + teamName + teamColor + player.getPlayer().getName());
+        player.getPlayer().setCustomNameVisible(true);
     }
 
     public void removeMember(UHCPlayer player){
         player.setTeam(null);
-        player.getPlayer().setPlayerListName(player.getPlayer().getName());
+        player.getPlayer().setPlayerListName(player.getOriginalName());
+        player.getPlayer().setDisplayName(player.getOriginalName());
+        player.getPlayer().setCustomName(player.getOriginalName());
+        player.getPlayer().setCustomNameVisible(true);
         this.members.remove(player);
     }
 
     public void removeAllMembers(){
-        for (UHCPlayer player : members){
-            player.leaveTeam();
-        }
-        members.clear();
+        for (UHCPlayer player : members)
+            removeMember(player);
     }
 
     public String getTeamName() {

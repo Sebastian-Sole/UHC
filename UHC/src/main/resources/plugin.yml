@@ -3,18 +3,6 @@ version: 1.1
 main: com.solemanseb.uhc.PluginMain
 api-version: 1.16
 commands:
-#  blueteam:
-#    description: Add player to the blue team
-#    usage: /blueteam <target>
-#    permission: battledome.blueteam
-#  redteam:
-#    description: Add player to the red team
-#    usage: /redteam <target>
-#    permission: battledome.redteam
-#  clearteams:
-#    description: Clears teams.
-#    usage: /clearteams
-#    permission: battledome.clearteams
   start:
     description: Start the Battledome game.
     usage: /start
@@ -23,15 +11,11 @@ commands:
     description: Stops the Battledome game.
     usage: /end
     permission: uhc.end
-#  createspawn:
-#    description: Creates spawn circle where the player is standing
-#    usage: /createspawn
-#    permission: battledome.createspawn
-#  top:
-#    description: Teleports player to top
-#    usage: /top
-#    permission: battledome.top
-#  tp:
-#    description: Teleports player to target if target is teammate
-#    usage: /tp <target>
-#    permission: battledome.tp
+  team:
+    description: Team commands
+    usage: /team <args>
+    permission: uhc.team
+  speed:
+    description: Increase the amount of blocks the border gets decreased by
+    usage: /speed <number>
+    permission: uhc.speed

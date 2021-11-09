@@ -9,10 +9,12 @@ public class UHCPlayer {
     private Team team;
     private ArrayList<Team> teamInviteSourceList = new ArrayList<>();
     private ArrayList<Team> requestedTeamsList;
+    private String originalName;
 
     public UHCPlayer(Player player, Team team) {
         this.player = player;
         this.team = team;
+        this.originalName = player.getName();
     }
 
     public UHCPlayer(Player player) {
@@ -70,6 +72,8 @@ public class UHCPlayer {
         requestedTeamsList.clear();
     }
 
-
+    public String getOriginalName() {
+        return originalName;
+    }
 }
 

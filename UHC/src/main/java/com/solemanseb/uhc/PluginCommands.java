@@ -8,10 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PluginCommands implements CommandExecutor {
@@ -45,6 +42,9 @@ public class PluginCommands implements CommandExecutor {
             Map.entry(14, ChatColor.GRAY.toString()),
             Map.entry(15, ChatColor.WHITE.toString())
     );
+    private int borderStartSize;
+    private long sizeDecrease;
+    private int speedFactor = 0;
 
     public PluginCommands(PluginMain main) {
         this.main = main;
@@ -84,7 +84,27 @@ public class PluginCommands implements CommandExecutor {
             if (worldBorderModified) {
                 WorldBorder wb = main.getWorld().getWorldBorder();
                 wb.setCenter(new Location(main.getWorld(),0,64,0));
-                wb.setSize(1500);
+                int teamAmount = teams.size();
+                if (teamAmount <= 3){
+                    wb.setSize(700*2);
+                    this.borderStartSize = 700;
+                }
+                else if (teamAmount <= 6){
+                    wb.setSize(800*2);
+                    this.borderStartSize = 800;
+                }
+                else if (teamAmount <= 10){
+                    wb.setSize(900*2);
+                    this.borderStartSize = 900;
+                }
+                else if (teamAmount <= 15){
+                    wb.setSize(1000*2);
+                    this.borderStartSize = 1000;
+                }
+                else{
+                    wb.setSize(1100*2);
+                    this.borderStartSize = 1100;
+                }
             }
 
             List<World> worlds = Bukkit.getWorlds();
@@ -99,6 +119,8 @@ public class PluginCommands implements CommandExecutor {
             for (UHCPlayer player : main.getActivePlayers()){
                 playerStateOnStart(player);
             }
+
+            scatter();
 
             startTimers();
 
@@ -241,7 +263,8 @@ public class PluginCommands implements CommandExecutor {
                         commandSender.sendMessage("Please provide a name");
                         return true;
                     }
-                    UHCPlayer targetPlayer = (UHCPlayer) Bukkit.getPlayer(playerName);
+
+                    UHCPlayer targetPlayer = main.getActivePlayers().stream().filter(player -> player.getPlayer().equals(Bukkit.getPlayer(playerName))).collect(Collectors.toList()).get(0);
                     Team invitingTeam = uhcPlayer.getTeam();
                     if (targetPlayer.getRequestedTeamsList().contains(invitingTeam)
                             && invitingTeam.getPlayerRequestsList().contains(targetPlayer)){ // If player has requested
@@ -261,6 +284,25 @@ public class PluginCommands implements CommandExecutor {
                         return true;
                     }
                 }
+            }
+        }
+        else if ("speed".equals(label)){
+            if (args.length > 1){
+                commandSender.sendMessage("Illegal command format. Please use /speed <number>");
+                return true;
+            }
+            try {
+                int speed = Integer.parseInt(args[0]);
+                if (speed < 0){
+                    commandSender.sendMessage("Please provide a positive speed number");
+                    return true;
+                }
+                else{
+                    this.speedFactor =  speed;
+                }
+            } catch (NumberFormatException e){
+                commandSender.sendMessage("Illegal command format. Please use /speed <number>");
+                return true;
             }
         }
 
@@ -283,58 +325,115 @@ public class PluginCommands implements CommandExecutor {
     }
 
     private void startTimers() {
+        switch (this.borderStartSize){
+            case 600 -> sizeDecrease = 100 + this.speedFactor;
+            case 700 -> sizeDecrease = 125 + this.speedFactor;
+            case 800 -> sizeDecrease = 150 + this.speedFactor;
+            case 900 -> sizeDecrease = 175 + this.speedFactor;
+        }
+
         // 10 MINUTE WARNING
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-            @Override
-            public void run() {
-                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "10 MINUTES!");
-                var xBorder = main.getWorld().getWorldBorder().getSize();
-                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, () -> {
+            if (main.getWorld().getWorldBorder().getSize()/2 <= 300.0){
+                sizeDecrease = 100;
             }
-        }, 6000, 18000L);
+            if (main.getWorld().getWorldBorder().getSize()/2 < 100.0){
+                sizeDecrease = 10;
+            }
+            Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "10 MINUTES!");
+            var nextBorder = (main.getWorld().getWorldBorder().getSize() / 2) - sizeDecrease;
+            Bukkit.broadcastMessage("Be inside +-x: " + ChatColor.GREEN  + nextBorder + ", +-z: " + ChatColor.GREEN.toString()  + nextBorder + ", or you will DIE");
+        }, 200, 1200L); // 6000, 18000L
 
         // 5 MINUTE WARNING
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
             @Override
             public void run() {
+                if (main.getWorld().getWorldBorder().getSize()/2 <= 300.0){
+                    sizeDecrease = 100;
+                }
+                else if (main.getWorld().getWorldBorder().getSize()/2 < 100.0){
+                    sizeDecrease = 10;
+                }
+                else if (main.getWorld().getWorldBorder().getSize()/2 <= 40){
+                    sizeDecrease = 0;
+                }
                 Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "5 MINUTES!");
-                var xBorder = main.getWorld().getWorldBorder().getSize();
-                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+                var nextBorder = (main.getWorld().getWorldBorder().getSize() / 2) - sizeDecrease;
+                Bukkit.broadcastMessage("Be inside +-x: " + ChatColor.GREEN  + nextBorder + ", +-z: " + ChatColor.GREEN.toString()  + nextBorder + ", or you will DIE");
             }
-        }, 12000, 18000L);
+        }, 12000, 18000L); // 12000, 18000L
 
         // 3 MINUTE WARNING
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
             @Override
             public void run() {
+                if (main.getWorld().getWorldBorder().getSize()/2 <= 300.0){
+                    sizeDecrease = 100;
+                }
+                if (main.getWorld().getWorldBorder().getSize()/2 < 100.0){
+                    sizeDecrease = 10;
+                }
                 Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "3 MINUTES!");
-                var xBorder = main.getWorld().getWorldBorder().getSize();
-                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+                var nextBorder = (main.getWorld().getWorldBorder().getSize() / 2) - sizeDecrease;
+                Bukkit.broadcastMessage("Be inside +-x: " + ChatColor.GREEN  + nextBorder + ", +-z: " + ChatColor.GREEN.toString()  + nextBorder + ", or you will DIE");
             }
-        }, 14400, 18000L);
+        }, 14400, 18000L); // 14400, 18000L
 
         // 1 MINUTE WARNING
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
-            @Override
-            public void run() {
-                Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "1 MINUTE!");
-                var xBorder = main.getWorld().getWorldBorder().getSize();
-                Bukkit.broadcastMessage("Be inside x: " + xBorder + ", z: " + xBorder + ", or you will DIE");
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, () -> {
+            if (main.getWorld().getWorldBorder().getSize()/2 <= 300.0){
+                sizeDecrease = 100;
             }
-        }, 16800, 18000L);
+            if (main.getWorld().getWorldBorder().getSize()/2 < 100.0){
+                sizeDecrease = 10;
+            }
+            Bukkit.broadcastMessage("Border shrinking in: " + ChatColor.BOLD + ChatColor.DARK_RED + "1 MINUTE!");
+            var nextBorder = (main.getWorld().getWorldBorder().getSize() / 2) - sizeDecrease;
+            Bukkit.broadcastMessage("Be inside +-x: " + ChatColor.GREEN  + nextBorder + ", +-z: " + ChatColor.GREEN.toString()  + nextBorder + ", or you will DIE");
+        }, 16800, 18000L); // 16800, 18000L
 
         // Shrink border
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this.main, new Runnable() {
             @Override
             public void run() {
+                if (main.getWorld().getWorldBorder().getSize()/2 <= 300.0){
+                    sizeDecrease = 100;
+                }
+                if (main.getWorld().getWorldBorder().getSize()/2 < 100.0){
+                    sizeDecrease = 10;
+                }
                 Bukkit.broadcastMessage("Border shrinking...");
                 WorldBorder wb = main.getWorld().getWorldBorder();
-                if (wb.getSize() < 200) {
-                    wb.setSize(wb.getSize() - 200.00);
-                }
+                double currentSize = wb.getSize()/2;
+                wb.setSize((currentSize-sizeDecrease)*2);
+                wb.setDamageAmount(4);
                 Bukkit.broadcastMessage("Next shrink: 15 Minutes");
             }
-        }, 18000, 18000L);
+        }, 18000, 18000L); // 18000, 18000L
+    }
+
+    private void scatter(){
+        // Bad random scatter. Should be more equal in the future
+        final ArrayList<Location> locs = new ArrayList<>();
+        for (int i = 0; i < teams.size(); ++i) {
+            double worldRadius = main.getWorld().getWorldBorder().getSize() / 2;
+            Location loc = new Location(
+                    main.getWorld(), Numbers.random((int) (-1 * worldRadius),(int) worldRadius), 0, Numbers.random((int) (-1 * worldRadius), (int) worldRadius));
+            loc.setY(main.getWorld().getHighestBlockYAt(loc));
+            locs.add(loc);
+        }
+
+        // Teleport players over an interval.
+        int iteration = 0;
+        for (Team team : teams){
+            Location teleportLocation = locs.get(iteration);
+            for (UHCPlayer player : team.getMembers()){
+                player.getPlayer().teleport(teleportLocation);
+            }
+            iteration++;
+        }
+
     }
 
     private void playerStateOnStart(UHCPlayer player) {

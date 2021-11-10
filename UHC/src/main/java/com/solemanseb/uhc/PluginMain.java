@@ -23,7 +23,7 @@ public class PluginMain extends JavaPlugin {
     private boolean debugMode = false;
     private World world;
 
-    private ArrayList<Player> activePlayers = new ArrayList<>();
+    private ArrayList<UHCPlayer> activePlayers = new ArrayList<>();
 
 
     @Override
@@ -79,11 +79,11 @@ public class PluginMain extends JavaPlugin {
         return this.world;
     }
 
-    public ArrayList<Player> getActivePlayers() {
+    public ArrayList<UHCPlayer> getActivePlayers() {
         return activePlayers;
     }
 
-    public void addActivePlayer(Player player) {
+    public void addActivePlayer(UHCPlayer player) {
         this.activePlayers.add(player);
     }
 

@@ -5,10 +5,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.WorldBorder;
-import org.bukkit.entity.Player;
+import org.bukkit.block.Block;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -18,6 +22,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.IllegalFormatCodePointException;
 import java.util.List;
 
 public class PluginListener implements Listener {
@@ -77,11 +82,89 @@ public class PluginListener implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event){
-        // Drop player head
-        //todo; Add if game is running check
+        if(main.commands.gameIsRunning){
+            return;
+        }
         Player killed = event.getEntity().getPlayer();
         event.getDrops().add(getPlayerHead(killed));
+    }
 
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event){
+        if (!main.getGamestyle().equalsIgnoreCase("cutclean")){
+            return;
+        }
+        Block blockBroken = event.getBlock();
+        Material type = event.getBlock().getType();
+        if (type.equals(Material.IRON_ORE)) {
+            blockBroken.setType(Material.IRON_INGOT);
+            event.setExpToDrop(4);
+        }
+        else if (type.equals(Material.GOLD_ORE)){
+            blockBroken.setType(Material.GOLD_ORE);
+            event.setExpToDrop(8);
+        }
+        else if (type.equals(Material.POTATO)){
+            blockBroken.setType(Material.BAKED_POTATO);
+            event.setExpToDrop(2);
+        }
+        // todo; find out why I can't get copper
+    }
+
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event){
+        if (!main.getGamestyle().equalsIgnoreCase("cutclean")){
+            return;
+        }
+        Entity entity = event.getEntity();
+        if (entity instanceof Chicken) {
+            for (ItemStack item : event.getDrops()) {
+                if (item.getType().equals(Material.CHICKEN)) {
+                    item.setType(Material.COOKED_CHICKEN);
+                }
+            }
+        } else if (entity instanceof Cow) {
+            for (ItemStack drop : event.getDrops()) {
+                if (drop.getType().equals(Material.BEEF)) {
+                    drop.setType(Material.COOKED_BEEF);
+                }
+            }
+        } else if (entity instanceof Pig) {
+            for (ItemStack item : event.getDrops()) {
+                if (item.getType().equals(Material.PORKCHOP)) {
+                    item.setType(Material.COOKED_PORKCHOP);
+                }
+            }
+        } else if (entity instanceof Rabbit) {
+            for (ItemStack item : event.getDrops()) {
+                if (item.getType().equals(Material.RABBIT)) {
+                    item.setType(Material.COOKED_RABBIT);
+                }
+            }
+        } else if (entity instanceof Sheep) {
+            for (ItemStack item : event.getDrops()) {
+                if (item.getType().equals(Material.MUTTON)) {
+                    item.setType(Material.COOKED_MUTTON);
+                }
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void onPlayerFish(PlayerFishEvent event) {
+        if (!main.getGamestyle().equalsIgnoreCase("cutclean")){
+            return;
+        }
+        Entity caught = event.getCaught();
+        if (caught instanceof ItemStack fish) {
+            if (fish.getType().equals(Material.SALMON)) {
+                fish.setType(Material.COOKED_SALMON);
+            }
+            else if (fish.getType().equals(Material.COD)){
+                fish.setType(Material.COOKED_COD);
+            }
+        }
     }
 
     private ItemStack getPlayerHead(Player player) {

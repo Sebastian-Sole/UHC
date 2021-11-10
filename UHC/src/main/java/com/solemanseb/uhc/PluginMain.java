@@ -24,6 +24,7 @@ public class PluginMain extends JavaPlugin {
     private World world;
 
     private ArrayList<UHCPlayer> activePlayers = new ArrayList<>();
+    private String gamestyle;
 
 
     @Override
@@ -94,5 +95,13 @@ public class PluginMain extends JavaPlugin {
 
     public void setWorld(World world1) {
         this.world = world1;
+    }
+
+    public void setGamestyle(String gamestyle) {
+        this.gamestyle = gamestyle;
+    }
+
+    public String getGamestyle() {
+        return gamestyle;
     }
 }

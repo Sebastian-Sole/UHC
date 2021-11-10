@@ -141,7 +141,7 @@ public class PluginCommands implements CommandExecutor {
                 commandSender.sendMessage("Cannot use team commands when game is running");
                 return true;
             }
-            UHCPlayer uhcPlayer = getUHCPlayerFromPlayer((Player) commandSender);
+            UHCPlayer commandSenderPlayer = getUHCPlayerFromPlayer((Player) commandSender);
             if (args.length == 0 || args.length > 2){
                 commandSender.sendMessage("Illegal command. Format: /team create <teamname>");
                 return true;
@@ -154,7 +154,7 @@ public class PluginCommands implements CommandExecutor {
                         return true;
                     }
                     for (Team team : teams){
-                        if (team.getMembers().contains(uhcPlayer)){
+                        if (team.getMembers().contains(commandSenderPlayer)){
                             commandSender.sendMessage("You are already on a team. Please use /team leave to leave before creating a new team");
                             return true;
                         }
@@ -163,15 +163,15 @@ public class PluginCommands implements CommandExecutor {
                             return true;
                         }
                     }
-                    Team newTeam = new Team(args[1],uhcPlayer, chatColors.get(teams.size())); //todo; add color
+                    Team newTeam = new Team(args[1],commandSenderPlayer, chatColors.get(teams.size())); //todo; add color
                     teams.add(newTeam);
                 }
                 // Leaving a team
                 else if (args[0].equals("leave")){
-                    var onTeam = teams.stream().anyMatch(team -> team.getMembers().contains(uhcPlayer));
+                    var onTeam = teams.stream().anyMatch(team -> team.getMembers().contains(commandSenderPlayer));
                     if (onTeam) {
-                        uhcPlayer.getPlayer().sendMessage("You have left " + uhcPlayer.getTeam().getTeamName());
-                        uhcPlayer.leaveTeam();
+                        commandSenderPlayer.getPlayer().sendMessage("You have left " + commandSenderPlayer.getTeam().getTeamName());
+                        commandSenderPlayer.leaveTeam();
                         return true;
                     }
                     commandSender.sendMessage("You are not on a team, illegal command");
@@ -179,17 +179,17 @@ public class PluginCommands implements CommandExecutor {
                 }
                 // Inviting players to a team
                 else if (args[0].equals("invite")){
-                    var senderTeam = uhcPlayer.getTeam(); // Get players team
+                    var senderTeam = commandSenderPlayer.getTeam(); // Get players team
                     if (senderTeam == null){ // If the player is not on a team, they can't invite
-                        uhcPlayer.getPlayer().sendMessage("You are not on a team. Use /team create <teamname> to create a team before inviting");
+                        commandSenderPlayer.getPlayer().sendMessage("You are not on a team. Use /team create <teamname> to create a team before inviting");
                         return true;
                     }
                     if (args.length != 2){ // If no target player is provided
-                        uhcPlayer.getPlayer().sendMessage("Illegal format. Use /team invite <playername> to invite a player");
+                        commandSenderPlayer.getPlayer().sendMessage("Illegal format. Use /team invite <playername> to invite a player");
                         return true;
                     }
                     if (!Bukkit.getOnlinePlayers().contains(Bukkit.getPlayer(args[1]))){
-                        uhcPlayer.getPlayer().sendMessage("Target is not online. Please invite online player");
+                        commandSenderPlayer.getPlayer().sendMessage("Target is not online. Please invite online player");
                         return true;
                     }
                     else{
@@ -202,26 +202,30 @@ public class PluginCommands implements CommandExecutor {
                     }
                 }
                 // Disbanding a team
-                else if (args[0].equals("disband")){
-                    var senderTeam = uhcPlayer.getTeam(); // Get players team
+                else if (args[0].equals("disband")){ // todo; check that commandsender is team leader
+                    if (!commandSenderPlayer.equals(commandSenderPlayer.getTeam().getMembers().get(0))){ // If not team leader
+                        commandSender.sendMessage("Only the team leader can disband the team");
+                        return true;
+                    }
+                    var senderTeam = commandSenderPlayer.getTeam(); // Get players team
                     senderTeam.removeAllMembers();
                     teams.remove(senderTeam);
                 }
                 // Requesting to join a team
                 else if (args[0].equals("request")){
                     if (args[1] == null){
-                        uhcPlayer.getPlayer().sendMessage("Invalid command format. Please use /team request <teamname>");
+                        commandSenderPlayer.getPlayer().sendMessage("Invalid command format. Please use /team request <teamname>");
                     }
                     String teamNameParam = args[1];
                     var teamNameMatch = teams.stream().filter(team -> team.getTeamName().equals(teamNameParam)).collect(Collectors.toList()).get(0);
                     if (teamNameMatch == null) { // If arg doesn't provide a legitimate team.
-                        uhcPlayer.getPlayer().sendMessage("Team doesn't exist, have you spelled it correctly?");
+                        commandSenderPlayer.getPlayer().sendMessage("Team doesn't exist, have you spelled it correctly?");
                         return true;
                     }
                     // If team exists
-                    uhcPlayer.sendRequest(teamNameMatch);
+                    commandSenderPlayer.sendRequest(teamNameMatch);
                     for (UHCPlayer member : teamNameMatch.getMembers()){
-                        member.getPlayer().sendMessage(uhcPlayer.getPlayer().getName() + " has requested to join your team.");
+                        member.getPlayer().sendMessage(commandSenderPlayer.getPlayer().getName() + " has requested to join your team.");
                         member.getPlayer().sendMessage("Use /team accept <playername> to accept, or /team decline <playername> to decline");
                     }
                     return true;
@@ -231,27 +235,27 @@ public class PluginCommands implements CommandExecutor {
                 else if (args[0].equals("join")){
                     String teamNameParam = args[1];
                     var teamNameMatch = teams.stream().filter(team -> team.getTeamName().equals(teamNameParam)).collect(Collectors.toList()).get(0);
-                    if (teamNameMatch == null) { // If arg doesn't provided a legitimate team.
-                        uhcPlayer.getPlayer().sendMessage("Team doesn't exist, have you spelled it correctly?");
+                    if (teamNameMatch == null) { // If arg doesn't provide a legitimate team.
+                        commandSenderPlayer.getPlayer().sendMessage("Team doesn't exist, have you spelled it correctly?");
                         return true;
                     }
                     // If player wants to join a team that exists, do the following
-                    if (teamNameMatch.getInviteTargets().contains(uhcPlayer)
-                            && uhcPlayer.getTeamInviteSourceList().contains(teamNameMatch)){ // If sender has been invited by team
-                        Team currentTeam = uhcPlayer.getTeam();
+                    if (teamNameMatch.getInviteTargets().contains(commandSenderPlayer)
+                            && commandSenderPlayer.getTeamInviteSourceList().contains(teamNameMatch)){ // If sender has been invited by team
+                        Team currentTeam = commandSenderPlayer.getTeam();
                         if (currentTeam != null){ // If player is already on a team
-                            currentTeam.removeMember(uhcPlayer); // Remove player from that team
+                            currentTeam.removeMember(commandSenderPlayer); // Remove player from that team
                         }
-                        Bukkit.broadcastMessage(uhcPlayer.getPlayer().getName() + " has joined " + teamNameMatch.getTeamName());
-                        teamNameMatch.addMember(uhcPlayer); // Add player to their new team
-                        teamNameMatch.removeInvitedPlayer(uhcPlayer);
-                        uhcPlayer.removeInviteFrom(teamNameMatch);
-                        uhcPlayer.clearRequests(); // So the player doesn't move teams unintentionally
+                        Bukkit.broadcastMessage(commandSenderPlayer.getPlayer().getName() + " has joined " + teamNameMatch.getTeamName());
+                        teamNameMatch.addMember(commandSenderPlayer); // Add player to their new team
+                        teamNameMatch.removeInvitedPlayer(commandSenderPlayer);
+                        commandSenderPlayer.removeInviteFrom(teamNameMatch);
+                        commandSenderPlayer.clearRequests(); // So the player doesn't move teams unintentionally
                         return true;
                     }
                     else { // If player hasn't been invited
-                        uhcPlayer.getPlayer().sendMessage("You cannot join a team you haven't been invited to");
-                        uhcPlayer.getPlayer().sendMessage("Use /team request <teamname> to request to join");
+                        commandSenderPlayer.getPlayer().sendMessage("You cannot join a team you haven't been invited to");
+                        commandSenderPlayer.getPlayer().sendMessage("Use /team request <teamname> to request to join");
                         return true;
                     }
 
@@ -265,22 +269,22 @@ public class PluginCommands implements CommandExecutor {
                     }
 
                     UHCPlayer targetPlayer = main.getActivePlayers().stream().filter(player -> player.getPlayer().equals(Bukkit.getPlayer(playerName))).collect(Collectors.toList()).get(0);
-                    Team invitingTeam = uhcPlayer.getTeam();
+                    Team invitingTeam = commandSenderPlayer.getTeam();
                     if (targetPlayer.getRequestedTeamsList().contains(invitingTeam)
                             && invitingTeam.getPlayerRequestsList().contains(targetPlayer)){ // If player has requested
                         Team currentTeam = targetPlayer.getTeam();
                         if (currentTeam !=null){
                             currentTeam.removeMember(targetPlayer);
                         }
-                        Bukkit.broadcastMessage(uhcPlayer.getPlayer().getName() + " has joined " + invitingTeam.getTeamName());
+                        Bukkit.broadcastMessage(commandSenderPlayer.getPlayer().getName() + " has joined " + invitingTeam.getTeamName());
                         invitingTeam.addMember(targetPlayer);
                         invitingTeam.removePlayerRequest(targetPlayer);
                         targetPlayer.clearRequests(); // So the player doesn't move teams unintentionally
                         return true;
                     }
                     else { // If player has not requested
-                        uhcPlayer.getPlayer().sendMessage("Player has not requested to join your team");
-                        uhcPlayer.getPlayer().sendMessage("Use /team invite <playername> to invite a player to your team");
+                        commandSenderPlayer.getPlayer().sendMessage("Player has not requested to join your team");
+                        commandSenderPlayer.getPlayer().sendMessage("Use /team invite <playername> to invite a player to your team");
                         return true;
                     }
                 }
@@ -295,14 +299,32 @@ public class PluginCommands implements CommandExecutor {
                 int speed = Integer.parseInt(args[0]);
                 if (speed < 0){
                     commandSender.sendMessage("Please provide a positive speed number");
-                    return true;
                 }
                 else{
                     this.speedFactor =  speed;
                 }
+                return true;
             } catch (NumberFormatException e){
                 commandSender.sendMessage("Illegal command format. Please use /speed <number>");
                 return true;
+            }
+        }
+        else if ("gamestyle".equals(label)){
+            if (gameIsRunning){
+                commandSender.sendMessage("Game is running. Use /end to end the game before executing this command");
+                return true;
+            }
+            if (args.length > 1){
+                commandSender.sendMessage("Illegal command format. Please use /gamestyle <gamestyle>");
+                return true;
+            }
+            String gamestyle = args[0];
+            if (gamestyle.equalsIgnoreCase("cutclean")){
+                main.setGamestyle(gamestyle);
+                return true;
+            }
+            else {
+                commandSender.sendMessage("Illegal gamestyle requested");
             }
         }
 
